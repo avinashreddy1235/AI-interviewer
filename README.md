@@ -82,6 +82,4 @@ An intelligent conversational AI agent designed to help users prepare for job in
    - Or type your answer if you prefer.
 3. **Feedback**: Click "End Session" to generate a comprehensive feedback report based on your performance.
 
-## License
 
-MIT
