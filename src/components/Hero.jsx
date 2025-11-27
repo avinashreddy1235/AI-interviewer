@@ -5,11 +5,12 @@ import { Briefcase, ArrowRight, Sparkles } from 'lucide-react';
 const Hero = () => {
     const { startInterview, error } = useInterview();
     const [role, setRole] = useState('');
+    const [limit, setLimit] = useState(5);
 
     const handleSubmit = (e) => {
         e.preventDefault();
         if (role.trim()) {
-            startInterview(role);
+            startInterview(role, parseInt(limit));
         }
     };
 
@@ -41,6 +42,22 @@ const Hero = () => {
                         value={role}
                         onChange={(e) => setRole(e.target.value)}
                         placeholder="Enter target role (e.g. Product Manager)"
+                        className="block w-full pl-10 pr-4 py-4 bg-white border border-gray-200 rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all shadow-sm"
+                        required
+                    />
+                </div>
+
+                <div className="relative group">
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400 group-focus-within:text-blue-600 transition-colors">
+                        <span className="text-sm font-bold">#</span>
+                    </div>
+                    <input
+                        type="number"
+                        min="1"
+                        max="20"
+                        value={limit}
+                        onChange={(e) => setLimit(e.target.value)}
+                        placeholder="Number of questions"
                         className="block w-full pl-10 pr-4 py-4 bg-white border border-gray-200 rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all shadow-sm"
                         required
                     />

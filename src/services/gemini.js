@@ -27,14 +27,18 @@ You should:
 4. Maintain a professional but encouraging tone.
 5. If the user asks for feedback during the interview, politely say you will provide it at the end.
 6. Keep your responses concise (under 50 words) to facilitate a natural voice conversation, unless you are explaining a complex concept.
+7. You must ask exactly {LIMIT} questions in total.
+8. Keep track of the question count.
+9. After the user answers the {LIMIT}th question, thank them and say "Thank you for your time. The interview is now concluded."
+10. Do not ask any more questions after the limit is reached.
 
 Start by introducing yourself and asking the first question.
 `;
 
-export const startInterviewSession = async (role) => {
+export const startInterviewSession = async (role, limit = 5) => {
     if (!genAI) throw new Error("Gemini not initialized");
 
-    const prompt = SYSTEM_PROMPT.replace("{ROLE}", role);
+    const prompt = SYSTEM_PROMPT.replace("{ROLE}", role).replace(/{LIMIT}/g, limit);
 
     // Create a new model instance for this session with the specific system instruction
     model = genAI.getGenerativeModel({

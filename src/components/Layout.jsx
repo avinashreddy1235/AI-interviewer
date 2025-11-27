@@ -1,6 +1,9 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
+import { useInterview } from '../context/InterviewContext';
 
 const Layout = ({ children }) => {
+    const { resetInterview } = useInterview();
     return (
         <div className="min-h-screen bg-gray-50 text-gray-900 font-sans selection:bg-blue-500 selection:text-white">
             <div className="max-w-4xl mx-auto px-4 py-8 min-h-screen flex flex-col">
@@ -13,8 +16,9 @@ const Layout = ({ children }) => {
                             Interview Partner
                         </h1>
                     </div>
-                    <nav>
-                        <a href="#" className="text-gray-500 hover:text-gray-900 transition-colors text-sm">About</a>
+                    <nav className="flex gap-6">
+                        <Link to="/" onClick={resetInterview} className="text-gray-500 hover:text-gray-900 transition-colors text-sm font-medium">Home</Link>
+                        <Link to="/history" className="text-gray-500 hover:text-gray-900 transition-colors text-sm font-medium">History</Link>
                     </nav>
                 </header>
                 <main className="flex-grow flex flex-col">

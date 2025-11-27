@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, useRef } from 'react';
 import { initializeGemini, startInterviewSession, sendMessage, generateFeedback } from '../services/gemini';
 import { startListening, stopListening, speak, stopSpeaking } from '../services/voice';
+import { saveInterview } from '../services/api';
 
 const InterviewContext = createContext();
 
@@ -9,6 +10,7 @@ export const useInterview = () => useContext(InterviewContext);
 export const InterviewProvider = ({ children }) => {
     const [status, setStatus] = useState('idle'); // idle, active, feedback, error
     const [currentRole, setCurrentRole] = useState('');
+    const [questionLimit, setQuestionLimit] = useState(5);
     const [messages, setMessages] = useState([]);
     const [isListening, setIsListening] = useState(false);
     const [isSpeaking, setIsSpeaking] = useState(false);
@@ -26,11 +28,12 @@ export const InterviewProvider = ({ children }) => {
         }
     }, []);
 
-    const startInterview = async (role) => {
+    const startInterview = async (role, limit = 5) => {
         try {
             setStatus('loading');
             setCurrentRole(role);
-            const initialMessage = await startInterviewSession(role);
+            setQuestionLimit(limit);
+            const initialMessage = await startInterviewSession(role, limit);
             setMessages([initialMessage]);
             setStatus('active');
             speakResponse(initialMessage.text);
@@ -102,6 +105,20 @@ export const InterviewProvider = ({ children }) => {
         try {
             const report = await generateFeedback(messages);
             setFeedback(report);
+
+            // Save to backend
+            try {
+                await saveInterview({
+                    date: new Date().toISOString(),
+                    topic: currentRole || 'General Interview',
+                    score: report.overallScore || 0,
+                    feedback: report,
+                    transcript: messages
+                });
+            } catch (saveError) {
+                console.error("Failed to save interview history:", saveError);
+            }
+
             setStatus('feedback');
         } catch (err) {
             console.error(err);
@@ -124,6 +141,7 @@ export const InterviewProvider = ({ children }) => {
         <InterviewContext.Provider value={{
             status,
             currentRole,
+            questionLimit,
             messages,
             isListening,
             isSpeaking,
