@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, useRef } from 'react';
 import { initializeGemini, startInterviewSession, sendMessage, generateFeedback } from '../services/gemini';
-import { startListening, stopListening, speak, stopSpeaking } from '../services/voice';
+import { startListening, stopListening, speak, stopSpeaking, isSpeechSupported } from '../services/voice';
 import { saveInterview } from '../services/api';
 
 const InterviewContext = createContext();
@@ -139,6 +139,7 @@ export const InterviewProvider = ({ children }) => {
 
     return (
         <InterviewContext.Provider value={{
+            isSpeechSupported: isSpeechSupported(),
             status,
             currentRole,
             questionLimit,

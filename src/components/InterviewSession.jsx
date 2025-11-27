@@ -12,7 +12,8 @@ const InterviewSession = () => {
         toggleRecording,
         endInterview,
         currentRole,
-        handleUserResponse
+        handleUserResponse,
+        isSpeechSupported
     } = useInterview();
 
     const messagesEndRef = useRef(null);
@@ -102,11 +103,14 @@ const InterviewSession = () => {
                 <div className="flex items-center justify-center gap-6 mb-4">
                     <button
                         onClick={toggleRecording}
+                        disabled={!isSpeechSupported}
                         className={clsx(
                             "w-16 h-16 rounded-full flex items-center justify-center transition-all shadow-lg",
-                            isListening
-                                ? "bg-red-500 hover:bg-red-600 ring-4 ring-red-100 scale-110"
-                                : "bg-blue-600 hover:bg-blue-700 shadow-blue-200"
+                            !isSpeechSupported
+                                ? "bg-gray-300 cursor-not-allowed"
+                                : isListening
+                                    ? "bg-red-500 hover:bg-red-600 ring-4 ring-red-100 scale-110"
+                                    : "bg-blue-600 hover:bg-blue-700 shadow-blue-200"
                         )}
                     >
                         {isListening ? <Square size={24} fill="white" /> : <Mic size={28} />}
@@ -135,7 +139,12 @@ const InterviewSession = () => {
                 </form>
 
                 <p className="text-center text-gray-400 text-sm mt-4">
-                    {isListening ? "Tap to stop speaking" : "Tap microphone to speak or type below"}
+                    {!isSpeechSupported
+                        ? "Voice interaction not supported in this browser"
+                        : isListening
+                            ? "Tap to stop speaking"
+                            : "Tap microphone to speak or type below"
+                    }
                 </p>
             </div>
         </div>

@@ -12,45 +12,68 @@ export const isSpeechSupported = () => {
 };
 
 export const startListening = (onResult, onEnd, onError) => {
-    if (!isSpeechSupported()) return;
-
-    if (recognition) {
-        recognition.abort();
+    if (!isSpeechSupported()) {
+        console.error("Speech recognition not supported in this browser.");
+        if (onError) onError("Speech recognition not supported");
+        return;
     }
 
-    recognition = new SpeechRecognition();
-    recognition.continuous = false; // We want to stop after one sentence/utterance for turn-taking
-    recognition.lang = 'en-US';
-    recognition.interimResults = true;
-    recognition.maxAlternatives = 1;
+    if (recognition) {
+        try {
+            recognition.abort();
+        } catch (e) {
+            console.warn("Failed to abort previous recognition:", e);
+        }
+    }
 
-    recognition.onresult = (event) => {
-        const transcript = event.results[0][0].transcript;
-        const isFinal = event.results[0].isFinal;
-        onResult(transcript, isFinal);
-    };
+    try {
+        recognition = new SpeechRecognition();
+        recognition.continuous = false; // Stop after one sentence
+        recognition.lang = 'en-US';
+        recognition.interimResults = true;
+        recognition.maxAlternatives = 1;
 
-    recognition.onend = () => {
-        if (onEnd) onEnd();
-    };
+        recognition.onresult = (event) => {
+            if (event.results.length > 0) {
+                const transcript = event.results[0][0].transcript;
+                const isFinal = event.results[0].isFinal;
+                onResult(transcript, isFinal);
+            }
+        };
 
-    recognition.onerror = (event) => {
-        console.error("Speech recognition error", event.error);
-        if (onError) onError(event.error);
-    };
+        recognition.onend = () => {
+            if (onEnd) onEnd();
+        };
 
-    recognition.start();
-    return recognition;
+        recognition.onerror = (event) => {
+            console.error("Speech recognition error:", event.error);
+            if (onError) onError(event.error);
+        };
+
+        recognition.start();
+        return recognition;
+    } catch (error) {
+        console.error("Failed to start speech recognition:", error);
+        if (onError) onError(error.message);
+        return null;
+    }
 };
 
 export const stopListening = () => {
     if (recognition) {
-        recognition.stop();
+        try {
+            recognition.stop();
+        } catch (e) {
+            console.warn("Failed to stop recognition:", e);
+        }
     }
 };
 
 export const speak = (text, onStart, onEnd) => {
-    if (!synthesis) return;
+    if (!synthesis) {
+        console.error("Speech synthesis not supported.");
+        return;
+    }
 
     // Cancel any current speech
     synthesis.cancel();
@@ -62,9 +85,16 @@ export const speak = (text, onStart, onEnd) => {
 
     // Try to find a good voice
     const voices = synthesis.getVoices();
-    const preferredVoice = voices.find(v => v.name.includes('Google US English')) || voices.find(v => v.lang === 'en-US');
-    if (preferredVoice) {
-        utterance.voice = preferredVoice;
+    // Wait for voices to load if they haven't yet (Chrome issue)
+    if (voices.length === 0) {
+        synthesis.onvoiceschanged = () => {
+            const updatedVoices = synthesis.getVoices();
+            setVoice(utterance, updatedVoices);
+            synthesis.speak(utterance);
+        };
+    } else {
+        setVoice(utterance, voices);
+        synthesis.speak(utterance);
     }
 
     utterance.onstart = () => {
@@ -75,8 +105,19 @@ export const speak = (text, onStart, onEnd) => {
         if (onEnd) onEnd();
     };
 
+    utterance.onerror = (event) => {
+        console.error("Speech synthesis error:", event);
+        if (onEnd) onEnd(); // Ensure we reset state even on error
+    };
+
     currentUtterance = utterance;
-    synthesis.speak(utterance);
+};
+
+const setVoice = (utterance, voices) => {
+    const preferredVoice = voices.find(v => v.name.includes('Google US English')) || voices.find(v => v.lang === 'en-US');
+    if (preferredVoice) {
+        utterance.voice = preferredVoice;
+    }
 };
 
 export const stopSpeaking = () => {
